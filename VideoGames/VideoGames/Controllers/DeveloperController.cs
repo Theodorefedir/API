@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using VideoGames.BLL.Dtos;
+using VideoGames.BLL.Services;
 using VideoGames.DAL.Entities;
 using VideoGames.DAL.Repositories;
 
@@ -10,47 +12,24 @@ namespace VideoGames.Controllers
     public class DeveloperController : ControllerBase
     {
         private readonly DeveloperRepository _developerRepository;
+        private readonly DeveloperService _developerService;
 
-        public DeveloperController(DeveloperRepository developerRepository)
+        public DeveloperController(DeveloperRepository developerRepository, DeveloperService developerService)
         {
             _developerRepository = developerRepository;
+            _developerService = developerService;
         }
-
         [HttpGet]
-        public async Task<IActionResult> GetAsync([FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)
+        public async Task<IActionResult> GetAsync(CancellationToken ct = default)
         {
-            int total = await _developerRepository.GetAll().CountAsync();
-            int pages = (int)Math.Ceiling((double)total / pageSize);
-
-            page = page < 1 || page > pages ? 1 : page;
-            pageSize = pageSize < 1 ? 20 : pageSize;
-
-            var developers = await _developerRepository
-                .GetAll()
-                .Include(d => d.Games)
-                .OrderBy(d => d.Id)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync(ct);
-
-            var dtos = developers.Select(d => new DeveloperDto
-            {
-                Id = d.Id,
-                Name = d.Name,
-                Country = d.Country,
-                Year = d.Year,
-                Description = d.Description,
-                Image = d.Image,
-                Games = d.Games.Select(g => g.Name).ToList()
-            });
-
-            return Ok(dtos);
+            var items = await _developerService.GetAllAsync(ct);
+            return Ok(items);
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetByIdAsync([FromRoute] int id, CancellationToken ct = default)
         {
-            var developer = await _developerRepository.GetByIdAsync(id, ct);
+            var developer = await _developerService.GetByIdAsync(id, ct);
 
             if (developer != null)
             {
@@ -63,25 +42,25 @@ namespace VideoGames.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateAsync([FromBody] Developer developer, CancellationToken ct = default)
+        public async Task<IActionResult> CreateAsync([FromBody] CreateDeveloperDto dto, CancellationToken ct = default)
         {
-            await _developerRepository.CreateAsync(developer, ct);
+            await _developerService.CreateAsync(dto, ct);
 
             return Ok("Developer added");
         }
 
         [HttpPut]
-        public async Task<IActionResult> UpdateAsync([FromBody] Developer developer, CancellationToken ct = default)
+        public async Task<IActionResult> UpdateAsync([FromBody] UpdateDeveloperDto dto, CancellationToken ct = default)
         {
-            await _developerRepository.UpdateAsync(developer, ct);
+            await _developerService.UpdateAsync(dto, ct);
 
             return Ok("Developer updated");
         }
 
-        [HttpDelete]
-        public async Task<IActionResult> DeleteAsync([FromBody] Developer developer, CancellationToken ct = default)
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteAsync([FromRoute] int id, CancellationToken ct = default)
         {
-            await _developerRepository.DeleteAsync(developer, ct);
+            await _developerService.DeleteAsync(id, ct);
 
             return Ok("Developer deleted");
         }

@@ -1,4 +1,4 @@
-﻿namespace VideoGames
+﻿namespace VideoGames.BLL.Dtos
 {
     public class GameDto
     {

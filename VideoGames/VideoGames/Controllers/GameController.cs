@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using VideoGames.BLL.Dtos;
 using VideoGames.DAL.Entities;
 using VideoGames.DAL.Repositories;
 
