@@ -3,14 +3,23 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Scalar.AspNetCore;
 using System;
-using VideoGames.DAL;
-using VideoGames.DAL.Initializer;
-using VideoGames.DAL.Repositories;
 using VideoGames.BLL.Mapper;
 using VideoGames.BLL.Services;
 using VideoGames.BLL.Validators;
+using VideoGames.DAL;
+using VideoGames.DAL.Initializer;
+using VideoGames.DAL.Repositories;
+using VideoGames.Middlewares;
+using Serilog;
+
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .WriteTo.Console()
+    .WriteTo.File("logs/app-.log", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseSerilog();
 
 // Add services to the container.
 
@@ -54,6 +63,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseMiddleware<LoggingMiddleware>();
+app.UseMiddleware<ConsoleLoggingMiddleware>();
+app.UseMiddleware<IpBlockMiddleware>();
+app.UseMiddleware<RequestCounterMiddleware>();
+app.UseMiddleware<ApiKeyMiddleware>();
 
 app.UseAuthorization();
 
